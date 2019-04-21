@@ -1,0 +1,8 @@
+server:
+  port: 8080
+  undertow:
+    worker-threads: 200
+  servlet:
+    session:
+      persistent: false
+      store-dir: /var/log/app
