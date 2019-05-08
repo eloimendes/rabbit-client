@@ -1,28 +1,46 @@
 package br.com.emendes.rabbitclient.gateway.amqp;
 
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.DirectExchange;
-import org.springframework.amqp.core.Queue;
-import org.springframework.context.annotation.Bean;
+import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.core.*;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Configuration;
 
+import javax.annotation.PostConstruct;
+
 @Configuration
+@RequiredArgsConstructor
 public class ClientConfig {
 
-	@Bean
-	public DirectExchange exchange() {
-		return new DirectExchange("tut.rep");
+	private final RabbitAdmin rabbitAdmin;
+
+	@Qualifier("rabbitAdminCommon")
+	private final RabbitAdmin rabbitAdminCommon;
+
+	public DirectExchange exchange(String name) {
+		return new DirectExchange(name);
 	}
 
-	@Bean
-	public Queue queue() {
-		return new Queue("tut.rep.responses");
+	public Queue queue(String name) {
+		return new Queue(name);
 	}
 
-	@Bean
-	public Binding binding(DirectExchange exchange, Queue queue) {
-		return BindingBuilder.bind(queue).to(exchange).with("response");
+	@PostConstruct
+	public void binding() {
+		bind("tut.rep", "tut.rep.responses", "responseA");
+	}
+
+	private void bind(String exchangeName, String queueName, String routingKey) {
+		final Exchange exchange = exchange(exchangeName);
+		rabbitAdminCommon.declareExchange(exchange);
+
+		final Queue queue = queue(queueName);
+		rabbitAdminCommon.declareQueue(queue);
+
+		final BindingBuilder.GenericArgumentsConfigurer binding = BindingBuilder.bind(queue).to(exchange).with(routingKey);
+		rabbitAdminCommon.declareBinding(binding.noargs());
+
+		System.out.println("bind executed");
 	}
 
 }

@@ -6,3 +6,13 @@ server:
     session:
       persistent: false
       store-dir: /var/log/app
+
+spring:
+  application:
+    name: rabbit-client
+  rabbitmq:
+    addresses: localhost
+    port: 5672
+    username: app-a
+    password: secret
+    virtual-host: app-a
